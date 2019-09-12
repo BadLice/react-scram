@@ -1,0 +1,86 @@
+html{
+    min-height:100%;
+    position:relative;
+}
+body{
+    height:100%;
+}
+
+#root {
+	height: 100%;
+}
+.hidden-opacity {
+	opacity:0;
+	transition: opacity 1s;
+}
+.overlay {
+	z-index: 10;
+	position: fixed;
+}
+.app-container {
+	height: 100%;
+	overflow-x: auto !important;
+}
+.phase-container {
+	height: 100%;
+	width: 300px;
+	overflow: auto !important;
+	border-radius: 5px;
+}
+.phase-name-input{
+	width:200px;
+	display: inline;
+}
+.phase-name-input, .phase-container {
+	background-color: #f6f8f9;
+
+}
+.task-container, .new-task-mask {
+	border-radius: 5px;
+	background-color: #ffffff;
+	box-shadow: 2px 2px #dddddd;
+	transition: box-shadow 0.2s;
+}
+.task-container:hover {
+	box-shadow: 2px 2px #bbbbbb;
+	transition: box-shadow 0.2s;
+}
+
+.task-select {
+	width: 110px;
+	display: block;
+	font-size: 10px;
+}
+
+.td-phase-container {
+	height: 97vh;
+}
+.tr-phase-container {
+	height: 100%;
+}
+.dynamic-input:focus {
+	border-width: 1px;
+}
+.dynamic-input {
+	border:none;
+}
+input[type="text"]:disabled {
+  background: none;
+}
+.corner-btn {
+    position: relative;
+    float: right;
+    background: red;
+		color: white;
+    top: -10px;
+    right: -10px;
+		font-size: 8px;
+		padding:0 3px 0 3px;
+}
+/* .hidden {
+		visibility: hidden;
+} */
+.new-task-mask {
+	height: 100px;
+	background-color: #c4c4c4
+}
