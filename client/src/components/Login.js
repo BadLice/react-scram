@@ -18,7 +18,10 @@ class Login extends React.Component {
 	}
 
 	render() {
-		if(this.props.getSessionId())
+		if(this.props.getDisplayErrorPage())
+			return (<Redirect to="/error/" />);
+
+		if(this.props.isValidLogin())
 			return (<Redirect to="/home/" />);
 
 			return (
@@ -89,13 +92,18 @@ class Login extends React.Component {
 		})
 		.then(res => res.json())
 		.then(res => {
-			if(res.success) {
-				this.props.setSessionId(res.sessionId);
+			if(res.queryErr) {
+				this.props.displayErrorPage();
 			}
 			else {
-				this.props.setSessionId(null);
-				this.handleNotify("Username or password not valid","w3-red");
-				this.setState({usernameErr:true,passwordErr:true});
+				if(res.success) {
+					this.props.setValidLogin();
+				}
+				else {
+					this.props.setValidLogin(null);
+					this.handleNotify("Username or password not valid","w3-red");
+					this.setState({usernameErr:true,passwordErr:true});
+				}
 			}
 		});
 	}
@@ -130,9 +138,8 @@ class Login extends React.Component {
 			else
 				this.handleNotify("Username already used", "w3-red");
 
-			this.setState({});
+				this.setState({});
 		});
-
 	}
 
 	handleNotify(text,className) {

@@ -1,6 +1,7 @@
 import React from 'react';
 import Phase from './Phase.js'
-import { Redirect  } from "react-router-dom";
+import LoadingPage from './LoadingPage.js'
+import {Redirect} from "react-router-dom";
 const uuidv4 = require('uuid/v4');
 
 
@@ -14,30 +15,29 @@ class Home extends React.Component {
 			notifyText: '',
 			showNotify: false,
 			notifyTimeoutFunction: null,
+			loading: true,
 		}
 	}
 
 	componentDidMount() {
 		fetch('/getData', {
 		  method: "POST",
-			headers: {
-			 'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				sessionId: this.props.getSessionId(),
-			})
 		}).then(res => res.json())
 		.then((res) => {
 			if(res.success)
-				this.setState({phases: res.phases});
-			else
-				;//error page
+				this.setState({phases: res.phases, loading: false});
 		});
 	}
 
 	render() {
-		if(!this.props.getSessionId())
+		if(this.props.getDisplayErrorPage())
+			return (<Redirect to="/error/" />);
+
+		if(!this.props.isValidLogin())
 			return (<Redirect to="/login/" />);
+
+		if(this.state.loading)
+			return <LoadingPage />
 
 	  return (
 	    <div className="app-container w3-container">
@@ -97,7 +97,7 @@ class Home extends React.Component {
 				body: JSON.stringify({
 					taskKey: this.state.dragItemKeyBuf,
 					phaseKey: newPhaseKey,
-					sessionId: this.props.getSessionId(),
+					sessionId: this.props.isValidLogin(),
 				})
 			})
 			.then(res => res.json())
@@ -115,6 +115,7 @@ class Home extends React.Component {
 				}
 				else {
 					this.setState({dragItemKeyBuf: null});
+					this.props.displayErrorPage();
 				}
 			});
 		}
@@ -144,7 +145,7 @@ class Home extends React.Component {
 			},
 			body: JSON.stringify({
 				taskKey: taskKey,
-				sessionId: this.props.getSessionId(),
+				sessionId: this.props.isValidLogin(),
 			})
 		})
 		.then(res => res.json())
@@ -159,6 +160,9 @@ class Home extends React.Component {
 				this.setState({phases: ph});
 				this.notify("Task removed");
 			}
+			else {
+				this.props.displayErrorPage();
+			}
 		})
 	}
 
@@ -170,7 +174,7 @@ class Home extends React.Component {
 			},
 			body: JSON.stringify({
 				phaseKey: key,
-				sessionId: this.props.getSessionId(),
+				sessionId: this.props.isValidLogin(),
 			})
 		})
 		.then(res => res.json())
@@ -181,6 +185,9 @@ class Home extends React.Component {
 
 				this.notify("Phase removed");
 				this.setState({phases: ph});
+			}
+			else {
+				this.props.displayErrorPage();
 			}
 		})
 	}
@@ -194,7 +201,7 @@ class Home extends React.Component {
 			},
 			body: JSON.stringify({
 				key: phaseKey,
-				sessionId: this.props.getSessionId(),
+				sessionId: this.props.isValidLogin(),
 			})
 		})
 		.then(res => res.json())
@@ -205,6 +212,9 @@ class Home extends React.Component {
 
 				this.notify("Phase added");
 				this.setState({phases: ph});
+			}
+			else {
+				this.props.displayErrorPage();
 			}
 		})
 	}
@@ -218,7 +228,7 @@ class Home extends React.Component {
 			body: JSON.stringify({
 				key: key,
 				name: newName,
-				sessionId: this.props.getSessionId(),
+				sessionId: this.props.isValidLogin(),
 			})
 		})
 		.then(res => res.json())
@@ -243,7 +253,7 @@ class Home extends React.Component {
 				body: JSON.stringify({
 					taskKey: this.state.dragItemKeyBuf,
 					phaseKey: phaseKey,
-					sessionId: this.props.getSessionId(),
+					sessionId: this.props.isValidLogin(),
 				})
 			})
 			.then(res => res.json())
@@ -269,7 +279,7 @@ class Home extends React.Component {
 			body: JSON.stringify({
 				key: newTaskKey,
 				phaseKey: phaseKey,
-				sessionId: this.props.getSessionId(),
+				sessionId: this.props.isValidLogin(),
 			})
 		})
 		.then(res => res.json())
@@ -280,6 +290,9 @@ class Home extends React.Component {
 
 				this.notify("Task added");
 				this.setState({phases: ph});
+			}
+			else {
+				this.props.displayErrorPage();
 			}
 		})
 	}
@@ -301,7 +314,6 @@ class Home extends React.Component {
 			body: JSON.stringify({
 				key: taskKey,
 				name: newName,
-				sessionId: this.props.getSessionId(),
 			})
 		})
 		.then(res => res.json())
@@ -329,7 +341,7 @@ class Home extends React.Component {
 			body: JSON.stringify({
 				key: taskKey,
 				priority: newPriority,
-				sessionId: this.props.getSessionId(),
+				sessionId: this.props.isValidLogin(),
 			})
 		})
 		.then(res => res.json())
@@ -345,6 +357,9 @@ class Home extends React.Component {
 				this.notify("Priority changed");
 				this.setState({phases: ph});
 			}
+			else {
+				this.props.displayErrorPage();
+			}
 		});
 	}
 
@@ -357,7 +372,7 @@ class Home extends React.Component {
 			body: JSON.stringify({
 				key: taskKey,
 				state: newTaskState,
-				sessionId: this.props.getSessionId(),
+				sessionId: this.props.isValidLogin(),
 			})
 		})
 		.then(res => res.json())
@@ -373,6 +388,9 @@ class Home extends React.Component {
 				this.notify("State changed");
 				this.setState({phases: ph});
 			}
+			else {
+				this.props.displayErrorPage();
+			}
 		});
 	}
 
@@ -384,7 +402,7 @@ class Home extends React.Component {
 			},
 			body: JSON.stringify({
 				key: taskKey,
-				sessionId: this.props.getSessionId(),
+				sessionId: this.props.isValidLogin(),
 			})
 		})
 		.then(res => res.json())
@@ -400,8 +418,12 @@ class Home extends React.Component {
 				this.notify("Marked ccompleted");
 				this.setState({phases: ph});
 			}
+			else {
+				this.props.displayErrorPage();
+			}
 		});
 	}
+
 }
 
 export default Home;

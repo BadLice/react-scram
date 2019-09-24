@@ -4,7 +4,9 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var mysql = require('mysql');
-var session = require('express-session');
+var cookieSession = require('cookie-session');
+var helmet = require('helmet');
+uuid = require('uuid/v4');
 
 var getDataRouter = require('./routes/getData');
 var addTaskRouter = require('./routes/addTask');
@@ -19,21 +21,24 @@ var changeTaskStateStateRouter = require('./routes/changeTaskState');
 var markTaskCompleteRouter = require('./routes/markTaskComplete');
 var loginRouter = require('./routes/login');
 var signUpRouter = require('./routes/signUp');
+var validateSessionRouter = require('./routes/validateSession');
+
 
 var app = express();
 
+app.use(helmet());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.json());
-// app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({
-	secret: 'scram table undercover secret key yay',
-	resave: true,
-	saveUninitialized: true,
-}));
 
+app.use(cookieSession({
+	name: 'session',
+  secret: 'secret-key-you-don\'t-tell-the-client',
+  signed: true,
+	maxAge: 60 * 60 * 1000 // 1 hour
+}));
 
 app.use('/getData', getDataRouter);
 app.use('/addTask', addTaskRouter);
@@ -48,6 +53,8 @@ app.use('/changeTaskState', changeTaskStateStateRouter);
 app.use('/markTaskComplete', markTaskCompleteRouter);
 app.use('/signUp', signUpRouter);
 app.use('/login', loginRouter);
+app.use('/validateSession', validateSessionRouter);
+
 
 
 logError = (txt) => {
@@ -82,22 +89,45 @@ dbPool  = mysql.createPool({
 });
 
 dbPool.execQuery = (sql, clientReq, clientRes, callback) => {
-	if(clientReq.session.id === clientReq.body.sessionId) {
-		dbPool.query(sql, (queryErr, queryRes) => {
-			if(queryErr) {
-				logError("ON QUERY: "+queryErr+"\tQUERY EXECUTED: "+sql);
+
+	//validate cookie session
+	let cksql = "SELECT cookie_session FROM account WHERE cookie_session=? AND id=?"
+	let ckparams=[
+		clientReq.session.cookieSessionId,
+		clientReq.session.userId
+	];
+	console.log(ckparams)
+	dbPool.execQueryNoSessionValidation(cksql, ckparams, clientReq, clientRes, (queryErr, queryRes) => {
+		if(queryErr) {
+			clientReq.session.userId = null;
+			clientRes.send({
+				success: false,
+				queryErr: true
+			});
+			clientRes.end();
+		}
+		else {
+			if(queryRes.length>0) {
+				dbPool.query(sql, (queryErr, queryRes) => {
+					if(queryErr) {
+						logError("ON QUERY: "+queryErr+"\tQUERY EXECUTED: "+sql);
+					}
+					callback(queryErr, queryRes, clientReq, clientRes);
+				});
 			}
-			callback(queryErr, queryRes, clientReq, clientRes);
-		});
-	}
-	else {
-		logError("Invalid session request\tId got from client: "+clientReq.body.sessionId+"\tActual id: "+clientReq.session.id);
-		callback("Invalid session", null, clientReq, clientRes);
-	}
+			else {
+				clientRes.send({
+					success: false,
+				});
+				clientRes.end();
+			}
+		}
+	});
+
 }
 
-dbPool.execQueryNoSessionValidation = (sql, clientReq, clientRes, callback) => {
-	dbPool.query(sql, (queryErr, queryRes) => {
+dbPool.execQueryNoSessionValidation = (sql, queryParams, clientReq, clientRes, callback) => {
+	dbPool.query(sql, queryParams, (queryErr, queryRes) => {
 		if(queryErr) {
 			logError("ON QUERY: "+queryErr+"\tQUERY EXECUTED: "+sql);
 		}

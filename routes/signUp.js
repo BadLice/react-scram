@@ -3,7 +3,11 @@ var router = express.Router();
 
 router.post('/', (clientReq, clientRes, next) => {
 
-	let sql="INSERT INTO account(id, username, password) VALUES (UUID(),'"+clientReq.body.username+"','"+clientReq.body.password+"')";
+	let sql="INSERT INTO account(id, username, password) VALUES (UUID(),?,?)";
+	let params = [
+		clientReq.body.username,
+		clientReq.body.password
+	];
 
 	if(clientReq.body.username.length>32 || clientReq.body.username.length < 5) {
 		clientRes.send({
@@ -13,10 +17,11 @@ router.post('/', (clientReq, clientRes, next) => {
 		return;
 	}
 
-	dbPool.execQueryNoSessionValidation(sql, clientReq, clientRes,(queryErr, queryRes) => {
+	dbPool.execQueryNoSessionValidation(sql, params, clientReq, clientRes,(queryErr, queryRes) => {
 		if(queryErr) {
 			clientRes.send({
-				success: false
+				success: false,
+				queryErr: true
 			});
 		}
 		else {

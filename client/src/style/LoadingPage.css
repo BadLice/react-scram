@@ -1,0 +1,58 @@
+/* body{
+  background:#333;
+} */
+
+.loader  {
+  margin:auto;
+  display:inline-block;
+  height:300px;
+  width:100px;
+  display:flex;
+  align-items:center;
+  justify-content:space-around;
+}
+
+.ball1 {
+  background:lightgray;
+  min-height:10px;
+  min-width:10px;
+  border-radius:50%;
+  animation: bounce 0.5s alternate infinite ease-in-out,
+    flash 3s alternate infinite ease-in-out;
+}
+.ball2 {
+  background:lightgray;
+  min-height:10px;
+  min-width:10px;
+  border-radius:50%;
+  animation: bounce 0.5s -.333s alternate infinite ease-in-out,
+    flash 3s 1s alternate infinite ease-in-out;
+}
+.ball3 {
+  background:lightgray;
+  min-height:10px;
+  min-width:10px;
+  border-radius:50%;
+  animation: bounce 0.5s -.666s alternate infinite ease-in-out,
+    flash 3s 2s alternate infinite ease-in-out;
+}
+
+@keyframes bounce {
+  from{
+    position:relative;
+    top:30vh;
+  }
+  to{
+    position:relative;
+    top:31vh;
+  }
+}
+
+@keyframes flash{
+  from{
+    background:#ccc;
+  }
+  to{
+    background:#444;
+  }
+}
