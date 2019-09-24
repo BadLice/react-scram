@@ -22,7 +22,7 @@ class Home extends React.Component {
 	componentDidMount() {
 		fetch('/getData', {
 		  method: "POST",
-		}).then(res => res.json())
+		}).then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 		.then((res) => {
 			if(res.success)
 				this.setState({phases: res.phases, loading: false});
@@ -30,9 +30,8 @@ class Home extends React.Component {
 	}
 
 	render() {
-		if(this.props.getDisplayErrorPage())
-			return (<Redirect to="/error/" />);
 
+		
 		if(!this.props.isValidLogin())
 			return (<Redirect to="/login/" />);
 
@@ -100,22 +99,24 @@ class Home extends React.Component {
 					sessionId: this.props.isValidLogin(),
 				})
 			})
-			.then(res => res.json())
+			.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 			.then(res => {
-				if(res.success) {
-					this.removeTaskOnClient(this.state.dragItemKeyBuf);
-					ph.map(o => {
-						let index = o.tasks.map(a => a.key).indexOf(taskKey);
-						if(index >= 0) {
-							o.tasks.splice(index+1,0,taskSwitch);
-						}
-					})
-					this.notify("Task moved");
-					this.setState({phases: ph, dragItemKeyBuf: null});
-				}
-				else {
-					this.setState({dragItemKeyBuf: null});
-					this.props.displayErrorPage();
+				if(res) {
+					if(res.success) {
+						this.removeTaskOnClient(this.state.dragItemKeyBuf);
+						ph.map(o => {
+							let index = o.tasks.map(a => a.key).indexOf(taskKey);
+							if(index >= 0) {
+								o.tasks.splice(index+1,0,taskSwitch);
+							}
+						})
+						this.notify("Task moved");
+						this.setState({phases: ph, dragItemKeyBuf: null});
+					}
+					else {
+						this.setState({dragItemKeyBuf: null});
+						this.props.displayErrorPage();
+					}
 				}
 			});
 		}
@@ -148,20 +149,22 @@ class Home extends React.Component {
 				sessionId: this.props.isValidLogin(),
 			})
 		})
-		.then(res => res.json())
+		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 		.then(res => {
-			if(res.success) {
-				let ph = [...this.state.phases];
-				ph.map( o => {
-					let taskIndex = o.tasks.map(a => a.key).indexOf(taskKey);
-					if(taskIndex >= 0)
-						o.tasks.splice(taskIndex,1)
-				});
-				this.setState({phases: ph});
-				this.notify("Task removed");
-			}
-			else {
-				this.props.displayErrorPage();
+			if(res) {
+				if(res.success) {
+					let ph = [...this.state.phases];
+					ph.map( o => {
+						let taskIndex = o.tasks.map(a => a.key).indexOf(taskKey);
+						if(taskIndex >= 0)
+							o.tasks.splice(taskIndex,1)
+					});
+					this.setState({phases: ph});
+					this.notify("Task removed");
+				}
+				else {
+					this.props.displayErrorPage();
+				}
 			}
 		})
 	}
@@ -177,19 +180,21 @@ class Home extends React.Component {
 				sessionId: this.props.isValidLogin(),
 			})
 		})
-		.then(res => res.json())
+		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 		.then(res => {
-			if(res.success) {
-				let ph = [...this.state.phases];
-				ph.splice(ph.map( o => o.key).indexOf(key),1);
+			if(res) {
+				if(res.success) {
+					let ph = [...this.state.phases];
+					ph.splice(ph.map( o => o.key).indexOf(key),1);
 
-				this.notify("Phase removed");
-				this.setState({phases: ph});
+					this.notify("Phase removed");
+					this.setState({phases: ph});
+				}
+				else {
+					this.props.displayErrorPage();
+				}
 			}
-			else {
-				this.props.displayErrorPage();
-			}
-		})
+		});
 	}
 
 	addPhase() {
@@ -204,17 +209,19 @@ class Home extends React.Component {
 				sessionId: this.props.isValidLogin(),
 			})
 		})
-		.then(res => res.json())
+		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 		.then(res => {
-			if(res.success) {
-				let ph = [...this.state.phases];
-				ph.push({key:phaseKey,name:'',tasks: []});
+			if(res) {
+				if(res.success) {
+					let ph = [...this.state.phases];
+					ph.push({key:phaseKey,name:'',tasks: []});
 
-				this.notify("Phase added");
-				this.setState({phases: ph});
-			}
-			else {
-				this.props.displayErrorPage();
+					this.notify("Phase added");
+					this.setState({phases: ph});
+				}
+				else {
+					this.props.displayErrorPage();
+				}
 			}
 		})
 	}
@@ -231,14 +238,16 @@ class Home extends React.Component {
 				sessionId: this.props.isValidLogin(),
 			})
 		})
-		.then(res => res.json())
+		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 		.then(res => {
-			if(res.success) {
-				let ph = [...this.state.phases];
-				ph.map(o => (o.key === key) && (o.name=newName));
+			if(res) {
+				if(res.success) {
+					let ph = [...this.state.phases];
+					ph.map(o => (o.key === key) && (o.name=newName));
 
-				this.notify("Name changed");
-				this.setState({phases: ph});
+					this.notify("Name changed");
+					this.setState({phases: ph});
+				}
 			}
 		});
 	}
@@ -256,15 +265,17 @@ class Home extends React.Component {
 					sessionId: this.props.isValidLogin(),
 				})
 			})
-			.then(res => res.json())
+			.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 			.then(res => {
-				let ph = [...this.state.phases];
-				let taskSwitch = this.getTask(this.state.dragItemKeyBuf);
-				this.removeTaskOnClient(this.state.dragItemKeyBuf);
-				ph.map(o => (o.key === phaseKey) && (o.tasks.push(taskSwitch)));
+				if(res) {
+					let ph = [...this.state.phases];
+					let taskSwitch = this.getTask(this.state.dragItemKeyBuf);
+					this.removeTaskOnClient(this.state.dragItemKeyBuf);
+					ph.map(o => (o.key === phaseKey) && (o.tasks.push(taskSwitch)));
 
-				this.notify("Task moved");
-				this.setState({phases: ph,dragItemKeyBuf: null});
+					this.notify("Task moved");
+					this.setState({phases: ph,dragItemKeyBuf: null});
+				}
 			})
 		}
 	}
@@ -282,17 +293,19 @@ class Home extends React.Component {
 				sessionId: this.props.isValidLogin(),
 			})
 		})
-		.then(res => res.json())
+		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 		.then(res => {
-			if(res.success) {
-				let ph = [...this.state.phases];
-				ph.map(o => (o.key === phaseKey) && (o.tasks.push({key:newTaskKey, name:'', date: new Date(), priority: '', completed:false, state:'' }))	);
+			if(res) {
+				if(res.success) {
+					let ph = [...this.state.phases];
+					ph.map(o => (o.key === phaseKey) && (o.tasks.push({key:newTaskKey, name:'', date: new Date(), priority: '', completed:false, state:'' }))	);
 
-				this.notify("Task added");
-				this.setState({phases: ph});
-			}
-			else {
-				this.props.displayErrorPage();
+					this.notify("Task added");
+					this.setState({phases: ph});
+				}
+				else {
+					this.props.displayErrorPage();
+				}
 			}
 		})
 	}
@@ -316,18 +329,20 @@ class Home extends React.Component {
 				name: newName,
 			})
 		})
-		.then(res => res.json())
+		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 		.then(res => {
-			if(res.success) {
-				let ph = [...this.state.phases];
-				ph.map(o => {
-					o.tasks.map(x => {
-						(x.key === taskKey) && (x.name=newName)
+			if(res) {
+				if(res.success) {
+					let ph = [...this.state.phases];
+					ph.map(o => {
+						o.tasks.map(x => {
+							(x.key === taskKey) && (x.name=newName)
+						});
 					});
-				});
 
-				this.notify("Name changed");
-				this.setState({phases: ph});
+					this.notify("Name changed");
+					this.setState({phases: ph});
+				}
 			}
 		});
 	}
@@ -344,21 +359,23 @@ class Home extends React.Component {
 				sessionId: this.props.isValidLogin(),
 			})
 		})
-		.then(res => res.json())
+		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 		.then(res => {
-			if(res.success) {
-				let ph = [...this.state.phases];
-				ph.map(o => {
-					o.tasks.map(x => {
-						(x.key === taskKey) && (x.priority=newPriority)
+			if(res) {
+				if(res.success) {
+					let ph = [...this.state.phases];
+					ph.map(o => {
+						o.tasks.map(x => {
+							(x.key === taskKey) && (x.priority=newPriority)
+						});
 					});
-				});
 
-				this.notify("Priority changed");
-				this.setState({phases: ph});
-			}
-			else {
-				this.props.displayErrorPage();
+					this.notify("Priority changed");
+					this.setState({phases: ph});
+				}
+				else {
+					this.props.displayErrorPage();
+				}
 			}
 		});
 	}
@@ -375,21 +392,23 @@ class Home extends React.Component {
 				sessionId: this.props.isValidLogin(),
 			})
 		})
-		.then(res => res.json())
+		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 		.then(res => {
-			if(res.success) {
-				let ph = [...this.state.phases];
-				ph.map(o => {
-					o.tasks.map(x => {
-						(x.key === taskKey) && (x.state=newTaskState)
+			if(res) {
+				if(res.success) {
+					let ph = [...this.state.phases];
+					ph.map(o => {
+						o.tasks.map(x => {
+							(x.key === taskKey) && (x.state=newTaskState)
+						});
 					});
-				});
 
-				this.notify("State changed");
-				this.setState({phases: ph});
-			}
-			else {
-				this.props.displayErrorPage();
+					this.notify("State changed");
+					this.setState({phases: ph});
+				}
+				else {
+					this.props.displayErrorPage();
+				}
 			}
 		});
 	}
@@ -405,21 +424,23 @@ class Home extends React.Component {
 				sessionId: this.props.isValidLogin(),
 			})
 		})
-		.then(res => res.json())
+		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 		.then(res => {
-			if(res.success) {
-				let ph = [...this.state.phases];
-				ph.map(o => {
-					o.tasks.map(x => {
-						(x.key === taskKey) && (x.completed=!x.completed)
+			if(res) {
+				if(res.success) {
+					let ph = [...this.state.phases];
+					ph.map(o => {
+						o.tasks.map(x => {
+							(x.key === taskKey) && (x.completed=!x.completed)
+						});
 					});
-				});
 
-				this.notify("Marked ccompleted");
-				this.setState({phases: ph});
-			}
-			else {
-				this.props.displayErrorPage();
+					this.notify("Marked ccompleted");
+					this.setState({phases: ph});
+				}
+				else {
+					this.props.displayErrorPage();
+				}
 			}
 		});
 	}

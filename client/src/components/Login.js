@@ -18,9 +18,6 @@ class Login extends React.Component {
 	}
 
 	render() {
-		if(this.props.getDisplayErrorPage())
-			return (<Redirect to="/error/" />);
-
 		if(this.props.isValidLogin())
 			return (<Redirect to="/home/" />);
 
@@ -90,21 +87,24 @@ class Login extends React.Component {
 				"password": SHA256(password).toString()
 			})
 		})
-		.then(res => res.json())
+		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 		.then(res => {
-			if(res.queryErr) {
-				this.props.displayErrorPage();
-			}
-			else {
-				if(res.success) {
-					this.props.setValidLogin();
+			if(res) {
+				if(res.queryErr) {
+					this.props.displayErrorPage();
 				}
 				else {
-					this.props.setValidLogin(null);
-					this.handleNotify("Username or password not valid","w3-red");
-					this.setState({usernameErr:true,passwordErr:true});
+					if(res.success) {
+						this.props.setValidLogin();
+					}
+					else {
+						this.props.setValidLogin(null);
+						this.handleNotify("Username or password not valid","w3-red");
+						this.setState({usernameErr:true,passwordErr:true});
+					}
 				}
 			}
+
 		});
 	}
 
@@ -131,14 +131,16 @@ class Login extends React.Component {
 				"password": SHA256(password).toString()
 			})
 		})
-		.then(res => res.json())
+		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
 		.then(res => {
-			if(res.success)
-				this.handleNotify("Sign Up successful\nYou can now login","w3-green");
-			else
-				this.handleNotify("Username already used", "w3-red");
-
-				this.setState({});
+			if(res) {
+				if(res.success)
+					this.handleNotify("Sign Up successful\nYou can now login","w3-green");
+				else {
+					this.handleNotify("Username already used", "w3-red");
+					this.setState({});
+				}
+			}
 		});
 	}
 

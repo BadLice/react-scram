@@ -1,5 +1,5 @@
 import React from 'react';
-import {Router, Route,Switch} from "react-router-dom";
+import {Router,Route,Switch} from "react-router-dom";
 import './style/w3.css';
 import './style/App.css';
 import Home from './components/Home.js'
@@ -23,31 +23,31 @@ class App extends React.Component {
 	}
 
 	componentDidMount() {
-		if(!window.location.href.includes('login')) {
+		if(!window.location.href.includes('error')) {
 			fetch('/validateSession',{
 				 method: 'post',
 			})
-			.then(res => res.json())
+			.then(res => res.status === 200 ? res.json() : this.displayErrorPage())
 			.then(res => {
-				if(res.success) {
-					this.setValidLogin();
-				}
-				else {
-					this.setInvalidLogin();
+				if(res) {
+					if(res.success) {
+						this.setValidLogin();
+					}
+					else {
+						this.setInvalidLogin();
+					}
 				}
 			});
-		}
-		else {
-			//remove cookie to-do
-			 //browser.cookies.remove('session');
-			 ;
 		}
 	}
 
 	render() {
-		if(!window.location.href.includes('login'))
-			if(this.state.toValidate)
-				return <LoadingPage />
+
+		if(this.getDisplayErrorPage() && !window.location.href.includes('error'))
+			window.location.href='/error/';
+
+		if(this.state.toValidate && !window.location.href.includes('error'))
+			return <LoadingPage />
 
 		return (
 			<Router history={customHistory}>

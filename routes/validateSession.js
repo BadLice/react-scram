@@ -8,7 +8,6 @@ router.post('/', (clientReq, clientRes, next) => {
 		clientReq.session.userId
 	];
 	dbPool.execQueryNoSessionValidation(cksql, ckparams, clientReq, clientRes, (queryErr, queryRes) => {
-		console.log("length: "+queryRes)
 		if(queryErr || queryRes.length <= 0) {
 			clientRes.send({
 				success: false
