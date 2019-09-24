@@ -1,12 +1,12 @@
 var createError = require('http-errors');
 var express = require('express');
-var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var mysql = require('mysql');
 var cookieSession = require('cookie-session');
 var helmet = require('helmet');
 uuid = require('uuid/v4');
+require('dotenv').config(); //package for environment variables (create a file named .env in root directory and set there the environment variables, then access them with process.env.VAR_NAME; add .env file to .gitignore)
 
 var getDataRouter = require('./routes/getData');
 var addTaskRouter = require('./routes/addTask');
@@ -35,7 +35,7 @@ app.use(express.json());
 
 app.use(cookieSession({
 	name: 'session',
-  secret: 'secret-key-you-don\'t-tell-the-client',
+  secret: process.env.COOKIE_SECRET,
   signed: true,
 	maxAge: 60 * 60 * 1000 // 1 hour
 }));
@@ -82,10 +82,10 @@ app.listen(3001);
 
 //---------------- global ----------------
 dbPool  = mysql.createPool({
-	host: "localhost",
-	user: "root",
-	password: "",
-	database: "scram_db"
+	host: process.env.DB_HOST,
+	user: process.env.DB_USER,
+	password: process.env.DB_PASS,
+	database: process.env.DB_DB_USED
 });
 
 dbPool.execQuery = (sql, clientReq, clientRes, callback) => {
@@ -96,7 +96,6 @@ dbPool.execQuery = (sql, clientReq, clientRes, callback) => {
 		clientReq.session.cookieSessionId,
 		clientReq.session.userId
 	];
-	console.log(ckparams)
 	dbPool.execQueryNoSessionValidation(cksql, ckparams, clientReq, clientRes, (queryErr, queryRes) => {
 		if(queryErr) {
 			clientReq.session.userId = null;
