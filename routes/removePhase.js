@@ -3,7 +3,6 @@ var router = express.Router();
 
 router.post('/', (clientReq, clientRes, next) => {
 	let sql = "DELETE FROM phase WHERE id='"+clientReq.body.phaseKey+"'";
-	console.log(sql)
 
 	dbPool.execQuery(sql, clientReq, clientRes,(queryErr, queryRes) => {
 

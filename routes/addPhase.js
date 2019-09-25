@@ -14,7 +14,7 @@ router.post('/', (clientReq, clientRes, next) => {
 		else {
 			clientRes.send({
 				success: true
-			});
+			});		
 		}
 
 		clientRes.end();

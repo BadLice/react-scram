@@ -22,6 +22,7 @@ router.post('/', (clientReq, clientRes, next) => {
 			clientRes.send({
 				success: true,
 			});
+			mapSocketClientIdf(clientReq.body.socketId,clientReq.session.userId);
 		}
 		clientRes.end(clientReq.session);
 	});

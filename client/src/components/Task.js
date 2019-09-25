@@ -26,7 +26,7 @@ class Task extends React.Component {
 
 							<div className="w3-text-grey">
 							Priority
-								<select disabled={this.props.completed} className="w3-select w3-margin-top w3-margin-bottom task-select" ref="priorityMenu" defaultValue={this.props.priority} onChange={() => this.props.changeTaskPriority(this.refs.priorityMenu.value)}>
+								<select disabled={this.props.completed} className="w3-select w3-margin-top w3-margin-bottom task-select" ref="priorityMenu" value={this.props.priority} onChange={() => this.props.changeTaskPriority(this.refs.priorityMenu.value)}>
 									<option value=''>--</option>
 									<option value='1'>Low</option>
 									<option value='2'>Medium</option>
@@ -36,7 +36,7 @@ class Task extends React.Component {
 
 							<div className="w3-text-grey">
 								State
-								<select disabled={this.props.completed} className="w3-select w3-margin-top w3-margin-bottom task-select" ref="stateMenu" defaultValue={this.props.state}  onChange={() => this.props.changeTaskState(this.refs.stateMenu.value)}>
+								<select disabled={this.props.completed} className="w3-select w3-margin-top w3-margin-bottom task-select" ref="stateMenu" value={this.props.state}  onChange={() => this.props.changeTaskState(this.refs.stateMenu.value)}>
 									<option value=''>--</option>
 									<option value='1'>To work</option>
 									<option value='2'>Work in progress</option>

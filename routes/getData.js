@@ -35,7 +35,7 @@ router.post('/', (clientReq, clientRes, next) => {
 						key: row.task_key,
 						name: row.task_name,
 						completed: row.task_completed,
-						date: toJsonDate(row.task_date.toString()),
+						date: toMySqlDate(row.task_date),
 						state: row.task_state,
 						priority: row.task_priority
 					})
@@ -50,6 +50,8 @@ router.post('/', (clientReq, clientRes, next) => {
 				phases: phases
 			})
 		}
+		// var io = req.app.get('socketio');
+	 	// io.emit("message", "hi!");
 		clientRes.end();
 	});
 });

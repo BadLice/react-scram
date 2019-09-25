@@ -68,14 +68,8 @@ class Login extends React.Component {
 		this.validateUername(username);
 		this.validatePassword(password);
 
-		if(this.state.usernameErr) {
-			this.handleNotify("Username is not valid","w3-red");
-			this.setState({});
-			return;
-		}
-		if(this.state.passwordErr) {
-			this.handleNotify("Password is not valid","w3-red");
-			this.setState({});
+		if(this.state.usernameErr || this.state.passwordErr) {
+			this.handleNotify("Username or password not valid","w3-red");
 			return;
 		}
 
@@ -98,8 +92,7 @@ class Login extends React.Component {
 						this.props.setValidLogin();
 					}
 					else {
-						this.props.setValidLogin(null);
-						this.handleNotify("Username or password not valid","w3-red");
+						this.props.setInvalidLogin();
 						this.setState({usernameErr:true,passwordErr:true});
 					}
 				}
@@ -112,14 +105,8 @@ class Login extends React.Component {
 		this.validateUername(username);
 		this.validatePassword(password);
 
-		if(this.state.usernameErr) {
-			this.handleNotify("Username is not valid","w3-red");
-			this.setState({});
-			return;
-		}
-		if(this.state.passwordErr) {
-			this.handleNotify("Password is not valid","w3-red");
-			this.setState({});
+		if(this.state.usernameErr || this.state.passwordErr) {
+				this.handleNotify("Username already used", "w3-red");
 			return;
 		}
 
@@ -137,8 +124,7 @@ class Login extends React.Component {
 				if(res.success)
 					this.handleNotify("Sign Up successful\nYou can now login","w3-green");
 				else {
-					this.handleNotify("Username already used", "w3-red");
-					this.setState({});
+					this.setState({usernameErr:true,passwordErr:true});
 				}
 			}
 		});

@@ -6,7 +6,7 @@ import Home from './components/Home.js'
 import Login from './components/Login.js'
 import ErrorPage from './components/ErrorPage.js'
 import LoadingPage from './components/LoadingPage.js'
-// import { withCookies, Cookies } from 'react-cookie';
+import socketIOClient from "socket.io-client";
 
 import { createBrowserHistory } from "history";
 
@@ -19,30 +19,52 @@ class App extends React.Component {
 			validLogin: false,
 			displayErrorPage: false,
 			toValidate:true,
+      endpoint: "http://127.0.0.1:3001",
+			toUpdateData : false,
+			socket: null
 		}
 	}
 
 	componentDidMount() {
-		if(!window.location.href.includes('error')) {
-			fetch('/validateSession',{
+		const { endpoint } = this.state;
+		var socket = this.state.socket;
+    socket = socketIOClient(endpoint);
+
+		socket.io.on('connect_error', (err) => this.displayErrorPage());
+
+		//listens to server when it emits 'update-data'
+		socket.on('update-data',() => this.setState({toUpdateData:true}));
+
+		socket.on('connect', () => {
+			if(!window.location.href.includes('error')) {
+				fetch('/validateSession',{
 				 method: 'post',
-			})
-			.then(res => res.status === 200 ? res.json() : this.displayErrorPage())
-			.then(res => {
-				if(res) {
-					if(res.success) {
-						this.setValidLogin();
+				 headers: {
+ 				 'Content-Type': 'application/json'
+	 		 		},
+	 				body: JSON.stringify({
+		 				socketId: socket.id
+	 				})
+				})
+				.then(res => res.status === 200 ? res.json() : this.displayErrorPage())
+				.then(res => {
+					if(res) {
+						if(res.success) {
+							this.setValidLogin();
+							this.setState({	toUpdateData : true})
+						}
+						else {
+							this.setInvalidLogin();
+						}
 					}
-					else {
-						this.setInvalidLogin();
-					}
-				}
-			});
-		}
+				});
+			}
+		});
+
+		this.setState({socket: socket})
 	}
 
 	render() {
-
 		if(this.getDisplayErrorPage() && !window.location.href.includes('error'))
 			window.location.href='/error/';
 
@@ -61,6 +83,10 @@ class App extends React.Component {
 							isValidLogin={() => this.isValidLogin()}
 							getDisplayErrorPage={() => this.getDisplayErrorPage()}
 							displayErrorPage={() => this.displayErrorPage()}
+							socket={this.state.socket}
+							toUpdateData={this.state.toUpdateData}
+							setDataUpdated={() => this.setDataUpdated()}
+							setInvalidLogin={() => this.setInvalidLogin()}
 							/>
 						}
 						/>
@@ -73,6 +99,10 @@ class App extends React.Component {
 								isValidLogin={() => this.isValidLogin()}
 								getDisplayErrorPage={() => this.getDisplayErrorPage()}
 								displayErrorPage={() => this.displayErrorPage()}
+								socket={this.state.socket}
+								toUpdateData={this.state.toUpdateData}
+								setDataUpdated={() => this.setDataUpdated()}
+								setInvalidLogin={() => this.setInvalidLogin()}
 							 />
 						 }
 						/>
@@ -85,6 +115,9 @@ class App extends React.Component {
 								isValidLogin={() => this.isValidLogin()}
 								getDisplayErrorPage={() => this.getDisplayErrorPage()}
 								displayErrorPage={() => this.displayErrorPage()}
+								socket={this.state.socket}
+								toUpdateData={this.state.toUpdateData}
+								setDataUpdated={() => this.setDataUpdated()}
 							/>
 						}
 						/>
@@ -103,7 +136,7 @@ class App extends React.Component {
 	}
 
 	setValidLogin() {
-		this.setState({toValidate:false, validLogin: true});
+		this.setState({toValidate:false, validLogin: true, toUpdateData:true});
 	}
 
 	setInvalidLogin() {
@@ -120,6 +153,9 @@ class App extends React.Component {
 
 	getDisplayErrorPage() {
 		return this.state.displayErrorPage;
+	}
+	setDataUpdated() {
+		this.setState({toUpdateData: false})
 	}
 }
 

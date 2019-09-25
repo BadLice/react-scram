@@ -33,6 +33,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.json());
 
+
+
 app.use(cookieSession({
 	name: 'session',
   secret: process.env.COOKIE_SECRET,
@@ -78,9 +80,25 @@ app.use(function(err, req, res, next) {
 });
 
 console.log('\x1b[35m%s\x1b[0m', '----------- RUNNING ON PORT 3001 -----------');
-app.listen(3001);
+
+var server = app.listen(3001);
+
+io = require('socket.io').listen(server);
+app.set('socketio', io);
+
+io.on("connection", socket => {
+	socketClientIdMap.push([socket.id,null]);
+  socket.on("disconnect", () => socketClientIdMap = socketClientIdMap.filter(o => o[0] !== socket.id));
+});
+
+
+
+
 
 //---------------- global ----------------
+
+socketClientIdMap = []; //0 = socket.id, 1 = client.id
+
 dbPool  = mysql.createPool({
 	host: process.env.DB_HOST,
 	user: process.env.DB_USER,
@@ -112,6 +130,10 @@ dbPool.execQuery = (sql, clientReq, clientRes, callback) => {
 						logError("ON QUERY: "+queryErr+"\tQUERY EXECUTED: "+sql);
 					}
 					callback(queryErr, queryRes, clientReq, clientRes);
+
+					if((sql.includes('INSERT') || sql.includes('DELETE') || sql.includes('UPDATE')) && clientReq.session.userId && clientReq.body.socketId)
+						getSocketIdsFromClientId(clientReq.session.userId,clientReq.body.socketId).map(o => io.to(o).emit('update-data'));
+
 				});
 			}
 			else {
@@ -138,11 +160,11 @@ toMySqlDate = (date) => {
 	return new Date(date).toISOString().slice(0, 19).replace('T', ' ');
 }
 
-toJsonDate = (date) => {
-	let t = date.toString().split(/[- :]/);
-	return new Date(Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]));
+mapSocketClientIdf = (socketId,clientId) => {
+	socketClientIdMap = socketClientIdMap.filter(o => o[0] !== socketId);
+	socketClientIdMap.push([socketId,clientId]);
 }
 
-
+getSocketIdsFromClientId = (clientId,exceptId) => socketClientIdMap.filter(o => (o[1] === clientId) && (o[0] !== exceptId)).map(o => o = o[0]);
 
 module.exports = app;

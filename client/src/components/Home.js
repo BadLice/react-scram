@@ -5,6 +5,7 @@ import {Redirect} from "react-router-dom";
 const uuidv4 = require('uuid/v4');
 
 
+
 class Home extends React.Component {
 
 	constructor(props){
@@ -16,22 +17,17 @@ class Home extends React.Component {
 			showNotify: false,
 			notifyTimeoutFunction: null,
 			loading: true,
+			listenServerChangesInterval: null,
 		}
 	}
 
 	componentDidMount() {
-		fetch('/getData', {
-		  method: "POST",
-		}).then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
-		.then((res) => {
-			if(res.success)
-				this.setState({phases: res.phases, loading: false});
-		});
+		if(!this.state.listenServerChangesInterval && window.location.href.includes('home')) {
+			this.setState({listenServerChangesInterval: setInterval(() => this.updateData(),1000)});
+		}
 	}
 
 	render() {
-
-		
 		if(!this.props.isValidLogin())
 			return (<Redirect to="/login/" />);
 
@@ -49,7 +45,7 @@ class Home extends React.Component {
 							{
 								this.state.phases.map(o =>
 								<td className="td-phase-container" key={o.key}>
-									<Phase key={o.key} name={o.name} markTaskComplete={(key) => this.markTaskComplete(key)} changeTaskState={(key,newTaskState) => this.changeTaskState(key,newTaskState)} removeTask={(taskKey) => this.removeTask(taskKey)} changeTaskPriority={(key,newPriority) => this.changeTaskPriority(key,newPriority)} changeTaskName={(key,newName) => this.changeTaskName(key,newName)} changeName={(newName) => this.changeName(o.key,newName)} removePhase={() => this.removePhase(o.key)} tasks={o.tasks} addDroppedTask={(e) => this.addDroppedTask(e,o.key)} addTask={(e) => this.addTask(o.key,e)} setDragItemKeyBuf={(taskKey) => this.setDragItemKeyBuf(taskKey)} insertTaskAfter={(taskKey) => this.insertTaskAfter(taskKey)}/>
+									<Phase key={o.key+''+o.name} name={o.name} markTaskComplete={(key) => this.markTaskComplete(key)} changeTaskState={(key,newTaskState) => this.changeTaskState(key,newTaskState)} removeTask={(taskKey) => this.removeTask(taskKey)} changeTaskPriority={(key,newPriority) => this.changeTaskPriority(key,newPriority)} changeTaskName={(key,newName) => this.changeTaskName(key,newName)} changeName={(newName) => this.changeName(o.key,newName)} removePhase={() => this.removePhase(o.key)} tasks={o.tasks} addDroppedTask={(e) => this.addDroppedTask(e,o.key)} addTask={(e) => this.addTask(o.key,e)} setDragItemKeyBuf={(taskKey) => this.setDragItemKeyBuf(taskKey)} insertTaskAfter={(taskKey) => this.insertTaskAfter(taskKey)}/>
 								</td>)
 							}
 							<td key="addBtn" className="w3-center td-phase-container no-select">
@@ -63,6 +59,22 @@ class Home extends React.Component {
 				</table>
 	    </div>
 	  );
+	}
+
+	updateData() {
+		if(this.props.toUpdateData) { //only true when server emits 'update-data'; setted true in App.js on socket event listener
+				fetch('/getData', {
+					method: "POST",
+					headers: {
+					'Content-Type': 'application/json'
+					 },
+				}).then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
+				.then((res) => {
+					if(res.success)
+						this.setState({phases: res.phases, loading: false});
+				});
+			this.props.setDataUpdated();
+		}
 	}
 
 	notify(text) {
@@ -96,7 +108,7 @@ class Home extends React.Component {
 				body: JSON.stringify({
 					taskKey: this.state.dragItemKeyBuf,
 					phaseKey: newPhaseKey,
-					sessionId: this.props.isValidLogin(),
+					socketId: this.props.socket.id,
 				})
 			})
 			.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
@@ -146,7 +158,7 @@ class Home extends React.Component {
 			},
 			body: JSON.stringify({
 				taskKey: taskKey,
-				sessionId: this.props.isValidLogin(),
+				socketId: this.props.socket.id,
 			})
 		})
 		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
@@ -177,7 +189,7 @@ class Home extends React.Component {
 			},
 			body: JSON.stringify({
 				phaseKey: key,
-				sessionId: this.props.isValidLogin(),
+				socketId: this.props.socket.id,
 			})
 		})
 		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
@@ -206,7 +218,7 @@ class Home extends React.Component {
 			},
 			body: JSON.stringify({
 				key: phaseKey,
-				sessionId: this.props.isValidLogin(),
+				socketId: this.props.socket.id,
 			})
 		})
 		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
@@ -235,7 +247,7 @@ class Home extends React.Component {
 			body: JSON.stringify({
 				key: key,
 				name: newName,
-				sessionId: this.props.isValidLogin(),
+				socketId: this.props.socket.id,
 			})
 		})
 		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
@@ -262,7 +274,7 @@ class Home extends React.Component {
 				body: JSON.stringify({
 					taskKey: this.state.dragItemKeyBuf,
 					phaseKey: phaseKey,
-					sessionId: this.props.isValidLogin(),
+					socketId: this.props.socket.id,
 				})
 			})
 			.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
@@ -290,7 +302,7 @@ class Home extends React.Component {
 			body: JSON.stringify({
 				key: newTaskKey,
 				phaseKey: phaseKey,
-				sessionId: this.props.isValidLogin(),
+				socketId: this.props.socket.id,
 			})
 		})
 		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
@@ -327,6 +339,7 @@ class Home extends React.Component {
 			body: JSON.stringify({
 				key: taskKey,
 				name: newName,
+				socketId: this.props.socket.id,
 			})
 		})
 		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
@@ -356,7 +369,7 @@ class Home extends React.Component {
 			body: JSON.stringify({
 				key: taskKey,
 				priority: newPriority,
-				sessionId: this.props.isValidLogin(),
+				socketId: this.props.socket.id,
 			})
 		})
 		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
@@ -389,7 +402,7 @@ class Home extends React.Component {
 			body: JSON.stringify({
 				key: taskKey,
 				state: newTaskState,
-				sessionId: this.props.isValidLogin(),
+				socketId: this.props.socket.id,
 			})
 		})
 		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
@@ -421,7 +434,7 @@ class Home extends React.Component {
 			},
 			body: JSON.stringify({
 				key: taskKey,
-				sessionId: this.props.isValidLogin(),
+				socketId: this.props.socket.id,
 			})
 		})
 		.then(res => res.status === 200 ? res.json() : this.props.displayErrorPage())
